@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="saveMovie" id=movieForm>
+  <form @submit.prevent="saveMovie" id="movieForm">
     <div class="form-group mb-3">
       <label for="title" class="form-label">Movie Title</label>
       <input type="text" v-model="formData.title" name="title" class="form-control" />
@@ -17,18 +17,17 @@
 </template>
 
 <script>
-import { ref } from "vue";
 import { ref, onMounted } from "vue";
 
 export default {
   data() {
     return {
-        csrf_token: "",
-        formData: {
+      formData: {
         title: '',
         description: '',
         poster: null
-      }
+      },
+      csrf_token: "", // Initialize csrf_token as a data property
     };
   },
   methods: {
@@ -37,21 +36,21 @@ export default {
       let form_data = new FormData(movieForm); 
 
       fetch("/api/v1/movies", { 
-          method: 'POST',
-          body: form_data, 
-          headers: {
-            'X-CSRFToken': csrf_token.value 
-          }
+        method: 'POST',
+        body: form_data, 
+        headers: {
+          'X-CSRFToken': this.csrf_token // Use this.csrf_token to access the csrf_token
+        }
       })
       .then(function (response) { 
-          return response.json(); 
+        return response.json(); 
       })
       .then(function (data) { 
-          // Display a success message 
-          console.log(data); 
+        // Display a success message 
+        console.log(data); 
       })
       .catch(function (error) { 
-          console.log(error); 
+        console.log(error); 
       });
     },
     handleFileUpload(event) {
@@ -62,12 +61,15 @@ export default {
       .then(response => response.json())
       .then(data => {
         console.log(data);
-        csrf_token.value = data.csrf_token; 
+        this.csrf_token = data.csrf_token; // Assign the csrf_token to this.csrf_token
       })
       .catch(error => {
         console.error(error);
       });
     }
+  },
+  mounted() { // Use the mounted hook instead of onMounted
+    this.getCsrfToken(); // Call getCsrfToken when the component is mounted
   }
 };
 </script>

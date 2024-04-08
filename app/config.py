@@ -10,3 +10,4 @@ class Config(object):
     UPLOAD_FOLDER = './uploads'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://lab5_user:password@localhost/lab5')
     SQLALCHEMY_TRACK_MODIFICATIONS = False # This is just here to suppress a warning from SQLAlchemy as it will soon be removed
+    

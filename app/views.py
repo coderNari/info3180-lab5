@@ -6,7 +6,7 @@ This file creates your application.
 """
 
 from app import app, db
-from flask import render_template, request, jsonify, send_file
+from flask import render_template, request, jsonify, send_file, send_from_directory
 from flask_wtf.csrf import generate_csrf
 import os
 
@@ -22,7 +22,27 @@ from datetime import datetime
 def index():
     return jsonify(message="This is the beginning of our API")
 
-@app.route('/api/v1/movies', methods=['GET','POST'])
+@app.route('/api/v1/movies', methods=['GET'])
+def get_movies():
+    movies = Movie.query.all()
+
+    movie_list = []
+    for movie in movies:
+        movie_data = {
+            "id": movie.id,
+            "title": movie.title,
+            "description": movie.description,
+            "poster": f"/api/v1/posters/{movie.poster}"  
+        }
+        movie_list.append(movie_data)
+
+    response_data = {
+        "movies": movie_list
+    }
+    return jsonify(response_data)
+
+
+@app.route('/api/v1/movies', methods=['POST'])
 def movies():
     movieForm = MovieForm()
     if request.method == 'POST':
@@ -58,9 +78,14 @@ def movies():
         return jsonify(form_errors(movieForm))
 
         
-@app.route('/api/v1/csrf-token', methods=['GET']) 
+@app.route('/api/v1/csrf-token') 
 def get_csrf():     
     return jsonify({'csrf_token': generate_csrf()})
+
+
+@app.route('/api/v1/posters/<filename>', methods=['GET'])
+def get_poster(filename):
+    return send_from_directory(os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER']), filename)
 
 ###
 # The functions below should be applicable to all Flask apps.
