@@ -16,60 +16,88 @@
   </form>
 </template>
 
-<script>
-import { ref, onMounted } from "vue";
-
-export default {
-  data() {
-    return {
-      formData: {
-        title: '',
-        description: '',
-        poster: null
-      },
-      csrf_token: "", // Initialize csrf_token as a data property
+<script setup>
+    import { ref, onMounted } from 'vue';
+    
+    onMounted(() => {
+        getCsrfToken();
+    });
+    
+    const title = ref('');
+    const description = ref('');
+    const poster = ref(null);
+    const csrf_token = ref('');
+    const successMessage = ref('');
+    const success = ref(false); // Boolean flag to determine success or failure
+  
+    const getCsrfToken = () => {
+        fetch('/api/v1/csrf-token')
+        .then(response => response.json())
+        .then(data => {
+            if (data.csrf_token) {
+                csrf_token.value = data.csrf_token;
+            }
+            
+        })
+        .catch(error => {
+            console.error(error);
+        });
     };
-  },
-  methods: {
-    saveMovie() {
-      let movieForm = document.getElementById('movieForm'); 
-      let form_data = new FormData(movieForm); 
-
-      fetch("/api/v1/movies", { 
+  
+    const saveMovie = () => {
+        let movieForm = document.getElementById('movieForm');
+        let form_data = new FormData(movieForm);
+        fetch("/api/v1/movies", {
         method: 'POST',
-        body: form_data, 
+        body: form_data,
         headers: {
-          'X-CSRFToken': this.csrf_token // Use this.csrf_token to access the csrf_token
+            'X-CSRFToken': csrf_token.value
         }
-      })
-      .then(function (response) { 
-        return response.json(); 
-      })
-      .then(function (data) { 
-        // Display a success message 
-        console.log(data); 
-      })
-      .catch(function (error) { 
-        console.log(error); 
-      });
-    },
-    handleFileUpload(event) {
-      this.formData.poster = event.target.files[0];
-    },
-    getCsrfToken() {
-      fetch('/api/v1/csrf-token')
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-        this.csrf_token = data.csrf_token; // Assign the csrf_token to this.csrf_token
-      })
-      .catch(error => {
-        console.error(error);
-      });
-    }
-  },
-  mounted() { // Use the mounted hook instead of onMounted
-    this.getCsrfToken(); // Call getCsrfToken when the component is mounted
-  }
-};
+        })
+    .then(response => {
+      if (response.ok) 
+      {
+        success.value = true;
+        return response.json();
+      } 
+      else 
+      {
+        success.value = false;
+        return response.json(); // ensures the response is retrieved
+        // throw new Error('Failed to add movie');
+      }
+    })
+    .then(data => {
+  // Set successMessage based on success or error response
+//   console.log(data);
+        if (success.value) {
+            successMessage.value = "Movie added successfully.";
+            // Clear form data if successful
+            title.value = '';
+            description.value = '';
+            poster.value.value = ''; // Clear the poster field
+        } else {
+            // Handle error response
+            if (data.errors) {
+            // Concatenate error messages to the successMessage
+            console.log(data.errors);
+            successMessage.value = "";
+            for(let i=0; i<data.errors.length; i++) {
+                successMessage.value += `<li>${data.errors[i]}</li>` ;
+            }
+            } else {
+            // If no specific error messages, use a generic error message
+            successMessage.value = "Failed to add movie. Please try again.";
+            }
+        }
+})
+
+    .catch(error => {
+      console.error(error);
+      // Handle error
+    });
+  };
+
+  
 </script>
+  

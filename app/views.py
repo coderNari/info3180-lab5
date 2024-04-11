@@ -78,7 +78,7 @@ def movies():
         return jsonify(form_errors(movieForm))
 
         
-@app.route('/api/v1/csrf-token') 
+@app.route('/api/v1/csrf-token', methods=['GET']) 
 def get_csrf():     
     return jsonify({'csrf_token': generate_csrf()})
 
